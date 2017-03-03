@@ -1,0 +1,319 @@
+# OBSERVER  / Observer
+# INSTRUME  / Instrument
+# TELESCOP  / Telescope
+# OBS-ALOC  / Observation or Standby
+# OBSERVAT  / Observatory
+ OBJECT    / Object
+# DATA-TYP  / Data Type
+# OBS-MOD   / Observation Mode
+# DETECTOR   / Name of detector
+# TIMESYS   / Time system used in this header
+# DATE-OBS  / UT date of Observation (yyyy-mm-dd)
+ EXP1TIME  / Integration time in seconds
+# EXPTIME   / Integration time in seconds
+# COADD     / Number of Coadds
+ COADDS    / Number of Coadds
+# DET-NSMP  / Number of Non-Destructive Reads
+# I_NDR     / Number of Non-Destructive Reads
+ NDR       / Number of Non-Destructive Reads
+# UT-STR    / Start Exposure at UTC (HH:MM:SS.SS)
+# UT        / Typical UTC at exposure (HH:MM:SS.SS)
+# UT-END    / End Exposure at UTC (HH:MM:SS.SS)
+# HST       / Start exposure at HST (HH:MM:SS.SS)
+# DET-TMP   / Detector Temperature
+# BIN-FCT1  / Binning factor of the X axis
+# BIN-FCT2  / Binning factor of the Y axis
+# BLANK     /  Value used for null pixels
+# BUNIT     / Unit of original pixel values
+# BSCALE    / Real   fits-value*BSCALE+BZERO
+# BZERO     / Real   fits-value*BSCALE+BZERO
+# I_NSQ     / Number of the frame in the sequence
+# I_NSQMAX  / Maximum number of the sequence
+# SLIT      / Entrance slit identifier
+# PROP-ID   / Proposal ID
+# DATASET   / Id of Observation Dataset
+# DET-ID    / Detector Id. (1:CAMERA, 2:SPECTROGRAPH)
+# EQUINOX   / Standard FK5 (years)
+# UT1-UTC   / Difference between UT1 and UTC
+# MJD       / Modified Julian Day at typical time
+# LST       / Typical local sidereal time during exposure
+# WCS-ORIG  / Origin of World Coordinate System
+# RA        / HH:MM:SS.SSS RA pointing
+# DEC       / +/-DD:MM:SS.SS DEC pointing
+# RA2000    / HH:MM:SS.SSS RA (J2000) pointing
+# DEC2000   / +/-DD:MM:SS.SS DEC (J2000) pointing
+# AZIMUTH   / Azimuth angle of telescope pointing
+# ALTITUDE  / Altitude angle of telescope pointing
+# ZD        / Zenith Distance at typical time
+# LONGPOLE  / The North Pole of the standard system
+# RADECSYS  / Equatorial coordinate system
+# CRPIX1    / Reference pixel in X (pixel)
+# CRPIX2    / Reference pixel in Y (pixel)
+# CRVAL1    / RA  (dg) of CRPIX1 reference pixel X
+# CRVAL2    / DEC (dg) of CRPIX2 reference pixel Y
+# CDELT1    / X Scale projected on detector (dg/pixel)
+# CDELT2    / Y Scale projected on detector (dg/pixel)
+# FOC-POS   / Focus where instrument is attached
+# TELFOCUS  / Focus where a beam is reachable
+# CAS-TAVE  / Cassegrain Enclosure Average Temperature
+# FOC-VAL   / Encoder value of the focus unit
+# AIRMASS   / Averaged Air Mass
+# INSROT    / Instrument rotator angle
+# INST-PA   / Instrument rotator position angle
+# AUTOGUID  / Autoguiding on/off
+# PROJP1    / Projection Type of the first axis
+# PROJP2    / Projection Type of the second axis
+# PC001001  / Coordinate translation matrix
+# PC001002  / Coordinate translation matrix
+# PC002001  / Coordinate translation matrix
+# PC002002  / Coordinate translation matrix
+# CTYPE1    / Pixel Coordinate System
+# CTYPE2    / Pixel Coordinate System
+# CUNIT1    / CRVAL1 units
+# CUNIT2    / CRVAL2 units
+ FILTER01  / First filter element
+ FILTER02  / Second filter element
+ FILTER03  / Third filter element
+# D_MODE    / Guide star mode (NGS,LGS,LGSwoNGS,NGS-NGS)
+# D_ENSHUT  / Entrance shutter position (OPEN,CLOSE)
+# D_ESHUTP  / Entrance shutter position (mm)
+# D_CLD1    / CAL LD 655nm (ON,OFF)
+# D_CLD2    / CAL LD 1550nm (ON,OFF)
+# D_CLD3    / CAL LD 589nm (ON,OFF)
+# D_CALX    / CAL X stage position
+# D_CALXP   / CAL X stage position (mm)
+# D_CALZ    / CAL Z stage position
+# D_CALZP   / CAL Z stage position (mm)
+# D_IMR     / IMR tracking status (TRACKING,SLEWING,STAND-BY)
+# D_IMRMOD  / IMR tracking mode (SID,NON-SID,ADI,STOP,OTHER)
+# D_IMRANG  / IMR angle (deg)
+# D_IMRPAD  / IMR position angle of dec. axis (deg)
+# D_IMRPAP  / IMR pupil position angle (deg)
+# D_IMRRA   / IMR tracking right ascension (J2000)
+# D_IMRDEC  / IMR tracking declination (J2000)
+# D_SADC    / SciPath ADC position (IN, OUT)
+# D_SADCP   / SciPath ADC position (mm)
+# D_SADCST  / SciPath ADC tracking status
+# D_SADCMD  / SciPath ADC tracking mode
+# D_SADCA1  / SciPath ADC prism #1 position (deg)
+# D_SADCA2  / SciPath ADC prism #2 position (deg)
+# D_SADCFC  / SciPath ADC prism angle correction factor
+# D_SADCRA  / SciPath ADC tracking right ascension (J2000)
+# D_SADCDC  / SciPath ADC tracking declination (J2000)
+# D_SADCPA  / SciPath ADC tracking position angle (deg)
+# D_TTX     / TT mount tip voltage (V)
+# D_TTY     / TT mount tilt voltage (V)
+# D_WTTC1   / HOWFS TT ch1 voltage (V)
+# D_WTTC2   / HOWFS TT ch2 voltage (V)
+# D_BS1     / BS1 position (NIR1,NIR2,OPT)
+# D_BS1P    / BS1 position (mm)
+# D_BS2     / BS2 position (BS589,MIRROR)
+# D_BS2P    / BS2 position (mm)
+# D_FCONV   / F-conversion optics position (IN,OUT)
+# D_FCONVP  / F-conversion optics stage position (mm)
+# D_AU1X    / AU1 offset X (mm)
+# D_AU1Y    / AU1 offset Y (mm)
+# D_AU1XA   / AU1 offset X on sky (arcsec)
+# D_AU1YA   / AU1 offset Y on sky (arcsec)
+# D_AU1FOC  / AU1 focus (mm)
+# D_AU1TX   / AU1 tilt X (deg)
+# D_AU1TY   / AU1 tilt Y (deg)
+# D_AU1M1X  / AU1 M1 X actuator (mm)
+# D_AU1M1Y  / AU1 M1 Y actuator (mm)
+# D_AU1M1Z  / AU1 M1 Z stage (mm)
+# D_AU1M2X  / AU1 M2 X actuator (mm)
+# D_AU1M2Y  / AU1 M2 Y actuator (mm)
+# D_AU1GSX  / AU1 guide star X pos (pix)
+# D_AU1GSY  / AU1 guide star Y pos (pix)
+# D_AU2X    / AU2 offset X (mm)
+# D_AU2Y    / AU2 offset Y (mm)
+# D_AU2XA   / AU2 offset X on sky (arcsec)
+# D_AU2YA   / AU2 offset Y on sky (arcsec)
+# D_AU2FOC  / AU2 focus (mm)
+# D_AU2TX   / AU2 tilt X (deg)
+# D_AU2TY   / AU2 tilt Y (deg)
+# D_AU2M1X  / AU2 M1 X actuator (mm)
+# D_AU2M1Y  / AU2 M1 Y actuator (mm)
+# D_AU2M1Z  / AU2 M1 Z stage (mm)
+# D_AU2M2X  / AU2 M2 X actuator (mm)
+# D_AU2M2Y  / AU2 M2 Y actuator (mm)
+# D_AU2GSX  / AU2 guide star X pos (pix)
+# D_AU2GSY  / AU2 guide star Y pos (pix)
+# D_HWNAP   / HOWFS NGS aperture name
+# D_HWNAPP  / HOWFS NGS aperture position (mm)
+# D_HWLAP   / HOWFS LGS aperture name
+# D_HWLAPP  / HOWFS LGS aperture position (mm)
+# D_HWAD    / HOWFS ADC stage position (IN,OUT)
+# D_HWADP   / HOWFS ADC stage position (mm)
+# D_HWADST  / HOWFS ADC tracking status
+# D_HWADMD  / HOWFS ADC tracking mode
+# D_HWADA1  / HOWFS ADC prism #1 position (deg)
+# D_HWADA2  / HOWFS ADC prism #1 position (deg)
+# D_HWADFC  / HOWFS ADC prism angle correction factor
+# D_HWADRA  / HOWFS ADC tracking right ascension (J2000)
+# D_HWADDC  / HOWFS ADC tracking declination (J2000)
+# D_HWADPA  / HOWFS ADC tracking position angle (deg)
+# D_HWABS   / HOWFS acq cam. BS position
+# D_HWABSP  / HOWFS acq cam. BS position (mm)
+# D_HWAF1   / HOWFS acq cam. filter wheel#1 state
+# D_HWAF1P  / HOWFS acq cam. filter wheel#1 pos (deg)
+# D_HWAF2   / HOWFS acq cam. filter wheel#2 state
+# D_HWAF2P  / HOWFS acq cam. filter wheel#2 pos (deg)
+# D_HWHBS   / HOWFS hires cam. BS position
+# D_HWHBSP  / HOWFS hires cam. BS position (mm)
+# D_VMAP    / HOWFS VM aperture
+# D_VMAPS   / HOWFS VM aperture size (arcsec)
+# D_HWPBS   / HOWFS pupil cam. BS position
+# D_HWPBSP  / HOWFS pupil cam. BS position (mm)
+# D_HWLAZ   / HOWFS LA focus stage position
+# D_HWLAZP  / HOWFS LA focus stage pos (mm)
+# D_HWLAF   / HOWFS LA filter wheel position
+# D_HWLAFP  / HOWFS LA filter wheel pos (deg)
+# D_HWLASH  / HOWFS LA shutter state (OPEN,CLOSE)
+# D_HWAPDA  / HOWFS APD Average Counts (kcps/elem)
+# D_LWAP1   / LOWFS AP1 name
+# D_LWAP1P  / HOWFS AP1 postition
+# D_LWAD    / LOWFS ADC stage position (IN,OUT)
+# D_LWADP   / LOWFS ADC stage position (mm)
+# D_LWADST  / LOWFS ADC tracking status
+# D_LWADMD  / LOWFS ADC tracking mode
+# D_LWADA1  / LOWFS ADC prism #1 position (deg)
+# D_LWADS1  / LOWFS ADC prism #1 position (microstep)
+# D_LWADA2  / LOWFS ADC prism #1 position (deg)
+# D_LWADS2  / LOWFS ADC prism #1 position (microstep)
+# D_LWADFC  / LOWFS ADC prism angle correction factor
+# D_LWADRA  / LOWFS ADC tracking right ascension (J2000)
+# D_LWADDC  / LOWFS ADC tracking declination (J2000)
+# D_LWADPA  / LOWFS ADC tracking position angle (deg)
+# D_LWABS   / LOWFS acq cam. BS position
+# D_LWABSP  / LOWFS acq cam. BS position (mm)
+# D_LWAF1   / LOWFS acq cam. filter wheel#1 state
+# D_LWAF1P  / LOWFS acq cam. filter wheel#1 pos (deg)
+# D_LWAF2   / LOWFS acq cam. filter wheel#2 state
+# D_LWAF2P  / LOWFS acq cam. filter wheel#2 pos (deg)
+# D_LWAP2   / LOWFS AP2 name
+# D_LWAPS   / LOWFS AP2 size (arcsec)
+# D_LWPBS   / LOWFS pupil cam. BS position
+# D_LWPBSP  / LOWFS pupil cam. BS position (mm)
+# D_LWLAZ   / LOWFS LA focus stage position
+# D_LWLAZP  / LOWFS LA focus stage pos (mm)
+# D_LWLAF   / LOWFS LA filter wheel position
+# D_LWLAFP  / LOWFS LA filter wheel pos (deg)
+# D_LWLASH  / LOWFS LA shutter state (OPEN,CLOSE)
+# D_LWAPDA  / LOWFS APD Average Counts (kcps/elem)
+# D_VMDRV   / VM drive (ON,OFF)
+# D_VMVOLT  / VM voltage (V)
+# D_VMFREQ  / VM frequency (Hz)
+# D_VMPHAS  / VM phase (deg)
+# D_LOOP    / RTS Loop state (ON,OFF)
+# D_DMGAIN  / RTS DM gain
+# D_TTGAIN  / RTS TT offload gain
+# D_PSUBG   / RTS piston subtract gain
+# D_DMCMTX  / RTS DM control matrix
+# D_TTCMTX  / RTS TT control matrix
+# D_WTTG    / RTS HOWFS-TT gain
+# D_LTTG    / RTS low order TT gain
+# D_LDFG    / RTS low order defocus gain
+# D_HTTG    / RTS high order TT gain
+# D_HDFG    / RTS high order defocus gain
+# D_ADFG    / RTS AU1 defocus gain
+# D_STTG    / RTS secondary TT gain
+# D_APDTI   / APD coolant inlet temperature (degC)
+# D_APDTO   / APD coolant outlet temperature (degC)
+# D_BNCTI   / Temperature of AO bench inside (degC)
+# D_BNCTO   / Temperature of AO bench outside (degC)
+# D_BNCHI   / Humidity of AO bench inside (%)
+# D_BNCHO   / Hhumidity of AO bench outside (%)
+# D_LSTATE  / Laser: Generation status (EMIT/SHUTTERED/OFF)
+# D_L589P   / Laser: Output power of SFG589 (W)
+# D_LPCUST  / Laser: Status of power control unit
+# D_LRCUST  / Laser: Status of remote control unit
+# D_LDSC    / Diag: Brightness of Sodium gas cell
+# D_LDSCPG  / Diag: Gain of PMT for Sodium gas cell
+# D_LDSCT   / Diag: Temperature of Sodium gas cell
+# D_LFID    / Fiber: ID of Laser Fiber
+# D_LFRP    / Fiber: Power returned from LLT through fiber
+# D_LFRPR   / Fiber: Gain range of returned power
+# D_LFTHP   / Fiber: Overall throughput of relay fiber (%)
+# D_LRSTAT  / LaserRoom: Overall status
+# D_LTLNCH  / LLT: Laser launching status (ON/OFF)
+# D_LTCLXP  / LLT: Collimator lens X-stage pos. (micron)
+# D_LTCLYP  / LLT: Collimator lens Y-stage pos. (micron)
+# D_LTCLZP  / LLT: Collimator lens Z-stage pos. (micron)
+# D_LTM3XP  / LLT: M3X Stage position of  (micron)
+# D_LTM3ZP  / LLT: M3Z Stage position of  (micron)
+# D_LTLPWR  / LLT: Laser power at LLT (Watt)
+# D_LTTOPT  / LLT: Temperature at OPT side (degC)
+# D_LTTIR   / LLT: Temperature at IR side (degC)
+# D_LTTFRT  / LLT: Temperature at FRONT side (degC)
+# D_LTTRER  / LLT: Temperature at REAR side (degC)
+# D_LTSHUT  / LLT: Shutter status (OPEN/CLOSE)
+# D_LTCPOL  / LTCS: Policy (FirstON/Classical)
+# D_LTCSHS  / LTCS: Status of shuttering (OPEN/CLOSE)
+# D_LTCLST  / LTCS: Laser propagation status (ONSKY/ON/OFF)
+# D_LTCTCS  / LTCS: Status of collision with telescopes
+# D_LTCSTS  / LTCS: Status of collision with satellite
+# D_LTCTTW  / LTCS: Time until telescope collision (sec)
+# D_LTCSTW  / LTCS: Time until satellite collision (sec)
+# I_MCW1NM  / Camera Wheel 1 element name
+# I_MCW1PK  / Camera Wheel 1 puka
+# I_CW1HV   / Camera Wheel 1 Hall Value
+# I_CW1MP   / Camera Wheel 1 motor position
+# I_MCW2NM  / Camera Wheel 2 element name
+# I_CW2PK   / Camera Wheel 2 puka
+# I_CW2HV   / Camera Wheel 2 Hall Value
+# I_CW2MP   / Camera Wheel 2 motor position
+# I_MCW3NM  / Camera Wheel 3 element name
+# I_CW3PK   / Camera Wheel 3 puka
+# I_CW3HV   / Camera Wheel 3 Hall Value
+# I_CW3MP   / Camera Wheel 3 motor position
+# I_MFOCMC  / Focus Stage microns
+# I_MFOCHV  / Focus Stage hall value
+# I_MFOCMP  / Focus Stage motor position
+# I_SCALE   / Pixel Scale
+# I_CAMRES  / CamRes setting
+ I_MDFMST  / Dual Flipmirror State
+# I_MFM1ST  / Flipmirror 1 State IN/OUT
+# I_MFM1HV  / Flipmirror 1 Hall Value
+# I_MFM1MP  / FlipMirror 1 motor position
+# I_MFM2ST  / Flipmirror 2 state IN/OUT
+# I_MFM2HV  / Flipmirror 2 Hall Value
+# I_MFM2MP  / FlipMirror 1 motor position
+# I_SLWNM   / SlitWheel element name
+# I_SLWPK   / Slitwheel puka
+# I_SLWHV   / Slitwheel Hall Value
+# I_SLWMP   / SlitWheel motor position
+# I_SPWNM   / Spectrograph Wheel element name
+# I_SPWPK   / Spectrograph Filter Wheel Puka
+# I_SPWHV   / Spectrograph Filter Wheel Hall Value
+# I_SPWMP   / Spectrograph Filter Wheel Motor Position
+# I_MECHAS  / Echelle Arcsec
+# I_MECHHV  / Echelle Hall value
+# I_MECHMP  / Echelle Motor Position
+# I_MXDSAS  / Cross Disperser Arcsec
+# I_MXDSHV  / Cross Disperser Hall value
+# I_MXDSMP  / Cross Disperser motor position
+# I_CKMODE  / Detector clock mode
+# I_GRNS    / Detector global reset pulsewidth (ns)
+# I_BGRFL   / Backgroud Resets flag T:Yes F:No
+# I_BGRRT   / Detector backgroud resets rate (ms)
+# I_BGRDL   / Detector background reset delay (ms)
+# I_BGRPW   / Backgroud Resets pulsewidth (nanoseconds)
+# I_SLWCNT  / Number of detector Slow Counts
+# I_VGGCL   / Detector VGGCL volts
+# I_VDET    / Detector VDET (volts)
+# I_VDDUC   / Detector VDDUC (volts)
+# I_VBIAS   / Detector Bias  I_VDET - I_VDDUC (volts)
+# GAIN      / AD conversion factor (electron/ADU)
+# I_PGAIN   / Gain of Redline Preamp Boards
+# I_NSUBAR  / Number of Sub Arrays
+# I_SAR1CX  / Subarray 1 center x pixel coord
+# I_SAR1CY  / Subarray 1 center y pixel coord
+# I_SAR1WD  / Subarray 1 width
+# I_SAR1HT  / Subarray 1 height
+# I_NDRASZ  / Nod R.A. size (arc seconds)
+# I_NDDCSZ  / Nod DEC size (arc seconds)
+# I_DTHSZ   / Dither step size (arc seconds)
+# I_DTHPAT  / Dither pattern shape
+# I_DTHNUM  / N positions in dither
+ I_DTHPOS  / Dither position
