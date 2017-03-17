@@ -299,7 +299,7 @@ def sigmap(inlist, sigmap, expmap='none', whtmap='none', inpref='', ffpref='', o
     os.remove(inverse_var_list)
 
     # remove all temporary files
-    #remove_temp_all(tmp_prefix)
+    remove_temp_all(tmp_prefix)
 
     return 0 
 
