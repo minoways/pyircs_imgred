@@ -134,16 +134,11 @@ def imgred_all_nb(inlist, output, start=0, end=15,
         if os.access(output, os.R_OK):
             os.remove(output)
         print '\n### Step 5: combining frames (final step) ###\n'
-        ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, second=True, first_pref='sdfr', second_pref=inpr)
+        ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, second=True, first_pref='sdfr', second_pref=inpr, sigmap=sigmap, expmap=expmap, whtmap=whtmap, ffpref='f2r')
         if ret != 0:
             print >> sys.stderr, 'Error in step 5'
             print >> sys.stderr, 'failed to shift and combine frames'
             return 1
-        if sigmap != 'none':
-            ret = sigmap(inlist, sigmap, expmap=expmap, whtmap=whtmap, inpref=inpr, ffpref='f2r', objmask=':OBJMASK', reject=reject)
-            if ret != 0:
-                print >> sys.stderr, 'Error in step 5'
-                print >> sys.
 
     return 0
    

@@ -245,7 +245,7 @@ def imgred_all(inlist, output, quick=False, start=0, end=15,
     # 8. shift and combine
     if start < 9 and end >= 8:
         print '\n### Step 8: combining frames ###\n'
-        ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, second=False)
+        ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, second=False, sigmap=sigmap, ffpref='fr')
         if ret != 0:
             print >> sys.stderr, 'Error in step 8'
             print >> sys.stderr, 'failed to shift and combine frames'
@@ -255,12 +255,6 @@ def imgred_all(inlist, output, quick=False, start=0, end=15,
         # 9. make object mask from the combined image
         if start < 10 and end >= 9:
             print '\n### Step 9: making object mask from the combined image ###\n'
-            if sigmap != 'none':
-                ret = sigmap(inlist, sigmap, inpref=inpr, ffpref='fr', objmask=':OBJMASK', reject=reject)
-                if ret != 0:
-                print >> sys.stderr, 'Error in step 9'
-                print >> sys.stderr, 'failed to make sigma map frame'
-                return 1
             ret = mkcombmask(output, inlist, sspref=inpr, outpref='mc', minpix=minpix, hsigma=hsigma, lsigma=lsigma, conv=conv, bpm='none', sigmap=sigmap)
             if ret != 0:
                 print >> sys.stderr, 'Error in step 9'
@@ -345,17 +339,10 @@ def imgred_all(inlist, output, quick=False, start=0, end=15,
             if os.access(output, os.R_OK):
                 os.remove(output)
             print '\n### Step 15: combining frames (final step) ###\n'
-            ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, second=True)
+            ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, second=True, ffpref='f2r', expmap=expmap, whtmap=whtmap, sigmap=sigmap)
             if ret != 0:
                 print >> sys.stderr, 'Error in step 15'
                 print >> sys.stderr, 'failed to shift and combine frames'
-                return 1
-
-            if sigmap != 'none':
-                ret = sigmap(inlist, sigmap, expmap=expmap, whtmap=whtmap, inpref=inpr, ffpref='f2r', objmask=':OBJMASK', reject=reject)
-                if ret != 0:
-                print >> sys.stderr, 'Error in step 15'
-                print >> sys.stderr, 'failed to make sigma map frame'
                 return 1
                 
     return 0

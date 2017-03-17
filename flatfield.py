@@ -93,7 +93,7 @@ def flatfield(inlist, flatimg, inpref='', outpref='f', dark='none', bpm='none'):
         imgout = pyfits.HDUList([hdu])
         imgout[0].header = hdr0
         imgout[0].header['EXPTIME'] = 1.0
-        imgout[0].header['EXPTORG'] = exptime
+        imgout[0].header['EXPTORG'] = exptime * coadds
         imgout.writeto(outimg_arr[i])
         imgout.close()
 
