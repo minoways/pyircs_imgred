@@ -48,7 +48,7 @@ def get_large_region(nx, ny, dx, dy):
 
     return x_size, y_size, xcmin, xcmax, ycmin, ycmax
 
-def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', combine='average', reject='none', expmap='none', sigmap='none', fscale=False, fbase=100, fhead='F1', second=False, first_pref='sdfr', second_pref='sdf2r'):
+def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', combine='average', reject='none', fscale=False, fbase=100, fhead='F1', second=False, first_pref='sdfr', second_pref='sdf2r', indep=False):
     
     # check output image
     if os.access(outimg, os.R_OK):
@@ -135,21 +135,9 @@ def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', comb
         if isinstance(objmask_arr, int):
             return 1
                 
-    # check exposure map 
-    if expmap.lower() == 'none':
-        expmap = ''
-    else:
-        if os.access(expmap, os.R_OK):
-            print >> sys.stderr, 'operation would overwrite existing exposure map (%s)' % expmap
-            return 1
-    
-    # check sigma map 
-    if sigmap.lower() == 'none':
-        sigmap = ''
-    else:
-        if os.access(sigmap, os.R_OK):
-            print >> sys.stderr, 'operation would overwrite existing sigma map (%s)' % sigmap
-            return 1
+    # independent run flag
+    if indep:
+        second = True
     
     # prepare for temporary file 
     tmp = tempfile.NamedTemporaryFile(suffix='', prefix='', dir='/tmp')
@@ -223,6 +211,10 @@ def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', comb
     # save the original fit geometry 
     fitgeom_org = fitgeom
 
+    objimg_arr = []
+    mskimg_arr = []
+    weight_arr = []
+    zeroshift_arr = []
     for i in range(len(inimg_arr)):
 
         # restore the original fit geometry 
@@ -272,12 +264,12 @@ def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', comb
             os.remove(msktr_fits)
         msk_img.writeto(msk_fits)
         msk_img.close()
-
+        
         # transform mask geometry
         iraf.geotran(msk_fits, msktr_fits, dbs_arr[i], gmp2_arr[i], geometr='linear', boundar='constant', constant=1)
         os.remove(msk_fits)
         convert_maskfits_int(msktr_fits, msktr_fits)
-
+                
         # load original frame
         img = pyfits.open(inimg_arr[i])
 
@@ -325,6 +317,12 @@ def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', comb
         obj_img.close()
         iraf.geotran(obj_fits, objtr_fits, dbs_arr[i], gmp2_arr[i], geometr='linear', boundar='constant', constant=0)
         fobj.write('%s\n' % objtr_fits)
+
+        # store the object, mask images and weight, scale, zero-shift information into arrays for sigma calculation (not implemented)
+        #weight_arr.append(weight)
+        #zeroshift_arr.append(bgmed[i]*flux_scale)
+        #objimg_arr.append(objtr_fits)
+        #mskimg_arr.append(msktr_fits)
         
         img.close()
 
@@ -338,20 +336,12 @@ def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', comb
     if os.access(comb_img, os.R_OK):
         os.remove(comb_img)
     iraf.unlearn('imcombine')
-    if sigmap == '':
-        tmp_sigma = ''
-    else:
-        tmp_sigma = tmp_prefix+'sigma.fits'
-    iraf.imcombine('@'+obj_list, comb_img, sigma=tmp_sigma, combine=combine, reject=reject, masktype='!BPM', maskvalue=0.0, zero='@'+zeroshift, weight='@'+expweight)
-    
+    iraf.imcombine('@'+obj_list, comb_img, sigma='', combine=combine, reject=reject, masktype='!BPM', maskvalue=0.0, zero='@'+zeroshift, weight='@'+expweight)
+            
     # cut image
     iraf.unlearn('imcopy')
     cut_img = '%s[%d:%d,%d:%d]' % (comb_img, xcmin, xcmax, ycmin, ycmax)
     iraf.imcopy(cut_img, outimg)
-    if sigmap != '':
-        cut_img = '%s[%d:%d,%d:%d]' % (tmp_sigma, xcmin, xcmax, ycmin, ycmax)
-        iraf.imcopy(cut_img, sigmap)
-        os.remove(tmp_sigma)
 
     # delete temporary object files
     remove_temp_all(tmp_prefix+'obj')
@@ -363,33 +353,59 @@ def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', comb
         im = pyfits.open(inimg_arr[i],mode='update')
 
         if second:
-            # check number of objects in the geomap file
-            nobj = 0
-            fgmp = open(gmp_arr[0])
-            for line in fgmp:
-                nobj += 1
             
-            im1 = pyfits.open(inimg_arr[i].replace(second_pref, first_pref),mode='update')
-            for j in range(nobj):
-                key = 'XC%d' % (j+1)
+            if indep:
+
+                # calculate offset
+                dxc = xcmin - xmin - dx[i]
+                dyc = ycmin - ymin - dy[i]
+
+                # retrieve rotation
+                rot = 0.0
+                fdbs = open(dbs_arr[i])
+                for line in fdbs:
+                    param = line[:-1].split()
+                    if param[0] == 'xrotation':
+                        rot = float(param[1])
+
+                if rot > 180.0:
+                    rot = rot - 360.0
+
+                im[0].header['dx'] = dx[i]
+                im[0].header['dy'] = dy[i]
+                im[0].header['dxc'] = dxc
+                im[0].header['dyc'] = dyc
+                im[0].header['rotation'] = rot
+                
+            else:
+                # check number of objects in the geomap file
+                nobj = 0
+                fgmp = open(gmp_arr[0])
+                for line in fgmp:
+                    nobj += 1
+            
+                im1 = pyfits.open(inimg_arr[i].replace(second_pref, first_pref),mode='update')
+                for j in range(nobj):
+                    key = 'XC%d' % (j+1)
+                    im[0].header[key] = float(im1[0].header[key])
+                    key = 'YC%d' % (j+1)
+                    im[0].header[key] = float(im1[0].header[key])
+                    key = 'PEAK%d' % (j+1)
+                    im[0].header[key] = float(im1[0].header[key])
+                    key = 'FWHM%d' % (j+1)
+                    im[0].header[key] = float(im1[0].header[key])
+                key = 'DX'
                 im[0].header[key] = float(im1[0].header[key])
-                key = 'YC%d' % (j+1)
+                key = 'DY'
                 im[0].header[key] = float(im1[0].header[key])
-                key = 'PEAK%d' % (j+1)
+                key = 'DXC'
                 im[0].header[key] = float(im1[0].header[key])
-                key = 'FWHM%d' % (j+1)
+                key = 'DYC'
                 im[0].header[key] = float(im1[0].header[key])
-            key = 'DX'
-            im[0].header[key] = float(im1[0].header[key])
-            key = 'DY'
-            im[0].header[key] = float(im1[0].header[key])
-            key = 'DXC'
-            im[0].header[key] = float(im1[0].header[key])
-            key = 'DYC'
-            im[0].header[key] = float(im1[0].header[key])
-            key = 'ROTATION'
-            im[0].header[key] = float(im1[0].header[key])
-            im1.close()
+                key = 'ROTATION'
+                im[0].header[key] = float(im1[0].header[key])
+                im1.close()    
+            
         else:
 
             # calculate offset
@@ -415,35 +431,6 @@ def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', comb
 
         im.close()
 
-    # make exposure time map
-    if expmap != '':
-        i = 0
-        exp_list = tmp_prefix+'_expmap.lst'
-        fexp = open(exp_list, 'w')
-        f = open(expweight)
-        for line in f:
-            t = float(line[:-1])
-            exp = np.ones((y_size,x_size)) * t
-            hdu = pyfits.PrimaryHDU(exp)
-            exp_img = pyfits.HDUList([hdu])
-            exp_fits = tmp_prefix+'exp'+os.path.basename(inimg_arr[i])
-            msktr_fits = tmp_prefix+'masktr'+os.path.basename(inimg_arr[i])
-            exp_img[0].header['bpm'] = msktr_fits
-            if os.access(exp_fits,os.R_OK):
-                os.remove(exp_fits)
-            exp_img.writeto(exp_fits)
-            exp_img.close()
-            fexp.write('%s\n' % exp_fits)
-            i += 1
-        fexp.close()
-        f.close()
-            
-        iraf.unlearn('imcombine')
-        iraf.imcombine('@'+exp_list, comb_img, combine='sum', reject='none', masktype='!BPM', maskvalue=0)
-        iraf.unlearn('imcopy')
-        cut_img = '%s[%d:%d,%d:%d]' % (comb_img, xcmin, xcmax, ycmin, ycmax)
-        iraf.imcopy(cut_img, expmap)
-
     # remove all temporary files
     remove_temp_all(tmp_prefix)
 
@@ -467,10 +454,6 @@ if __name__=="__main__":
     parser.add_option("--reject", dest="reject", type="choice", default="sigclip",
                       choices=["none", "minmax", "ccdclip", "crreject", "sigclip", "avsigclip", "pclipor"],
                       help="type of rejection (none|minmax|ccdclip|crreject|sigclip|avsigclip|pclipor, default=sigclip)")
-    parser.add_option("--expmap", dest="expmap", type="string", default="none",
-                      help="exposure map file name (default=none)")
-    parser.add_option("--sigmap", dest="sigmap", type="string", default="none",
-                      help="sigma map file name (default=none)")
     parser.add_option("--fscale", dest="fscale", action="store_true", default=False,
                       help="Scaling with the reference object flux (default=False)")    
     parser.add_option("--fbase", dest="fbase", type="float", default=100.0,
@@ -483,6 +466,8 @@ if __name__=="__main__":
                       help="Prefix of the first sky subtracted images (default=sdfr)")    
     parser.add_option("--second_pref", dest="second_pref", type="string", default='sdf2r',
                       help="Prefix of the second sky subtracted images (default=sdf2r)")    
+    parser.add_option("--indep", dest="indep", action="store_true", default=False,
+                      help="Flag for independent command execution (default=False)")    
 
     (options, args) = parser.parse_args()
 
@@ -490,5 +475,5 @@ if __name__=="__main__":
         parser.print_help()
         sys.exit()
 
-    imshiftcomb(args[0], args[1], fitgeom=options.fitgeom, inpref=options.inpref, objmask=options.objmask, combine=options.combine, reject=options.reject, expmap=options.expmap, sigmap=options.sigmap, fscale=options.fscale, fbase=options.fbase, fhead=options.fhead, second=options.second, first_pref=options.first_pref, second_pref=options.second_pref)
+    imshiftcomb(args[0], args[1], fitgeom=options.fitgeom, inpref=options.inpref, objmask=options.objmask, combine=options.combine, reject=options.reject, fscale=options.fscale, fbase=options.fbase, fhead=options.fhead, second=options.second, first_pref=options.first_pref, second_pref=options.second_pref, indep=options.indep)
     

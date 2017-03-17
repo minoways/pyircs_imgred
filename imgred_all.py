@@ -6,7 +6,9 @@
 #  2014.01.10 -- Revised after correcting bugs found in the quick reduction at the summit (ver0.2)
 #  2014.02.12 -- Added erase option (ver0.3)
 #  2015.10.01 -- Added fringe subtaction (ver.0.6)
+#  2017.03.08 -- Added parameter file option
 import os,sys
+import os.path
 from shutil import move
 import pyfits
 from pyraf import iraf
@@ -28,6 +30,7 @@ from optparse import OptionParser
 from comment_out_skipped import *
 from erase_file import * 
 from copy_gmp import * 
+from sigmap import *
 
 def imgred_all(inlist, output, quick=False, start=0, end=15,
                flat='none', skyflat=True, bpm='none', iternum=50, nsigma=3, minpix=250, hsigma=3, lsigma=10, conv='block 3 3',
@@ -35,8 +38,8 @@ def imgred_all(inlist, output, quick=False, start=0, end=15,
                dist='none',
                fringe=False, fr_x0=0.0, fr_y0=0.0, fr_step=5,
                trace=True, fitgeom='shift',
-               combine='average', reject='none', expmap='none', sigmap='none',erase=False):
-
+               combine='average', reject='none', expmap='none', sigmap='none', whtmap='none', erase=False):
+    
     ret = 0
 
     inpr = ''
@@ -91,6 +94,8 @@ def imgred_all(inlist, output, quick=False, start=0, end=15,
             erase_file(inlist, inpref='sdfr', ext='dbs')
             if os.access(output, os.R_OK):
                 iraf.delete(output, verify='no')
+            if sigmap != 'none' and os.access(sigmap, os.R_OK):
+                iraf.delete(sigmap, verify='no')
 
         # step 9
         inpr = 'r'
@@ -137,6 +142,9 @@ def imgred_all(inlist, output, quick=False, start=0, end=15,
             if expmap != 'none':
                 if os.access(expmap, os.R_OK):
                     os.remove(expmap)
+            if whtmap != 'none':
+                if os.access(whtmap, os.R_OK):
+                    os.remove(whtmap)
             if sigmap != 'none':
                 if os.access(sigmap, os.R_OK):
                     os.remove(sigmap)
@@ -237,7 +245,7 @@ def imgred_all(inlist, output, quick=False, start=0, end=15,
     # 8. shift and combine
     if start < 9 and end >= 8:
         print '\n### Step 8: combining frames ###\n'
-        ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, expmap=expmap, sigmap=sigmap, second=False)
+        ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, second=False)
         if ret != 0:
             print >> sys.stderr, 'Error in step 8'
             print >> sys.stderr, 'failed to shift and combine frames'
@@ -247,6 +255,12 @@ def imgred_all(inlist, output, quick=False, start=0, end=15,
         # 9. make object mask from the combined image
         if start < 10 and end >= 9:
             print '\n### Step 9: making object mask from the combined image ###\n'
+            if sigmap != 'none':
+                ret = sigmap(inlist, sigmap, inpref=inpr, ffpref='fr', objmask=':OBJMASK', reject=reject)
+                if ret != 0:
+                print >> sys.stderr, 'Error in step 9'
+                print >> sys.stderr, 'failed to make sigma map frame'
+                return 1
             ret = mkcombmask(output, inlist, sspref=inpr, outpref='mc', minpix=minpix, hsigma=hsigma, lsigma=lsigma, conv=conv, bpm='none', sigmap=sigmap)
             if ret != 0:
                 print >> sys.stderr, 'Error in step 9'
@@ -331,12 +345,19 @@ def imgred_all(inlist, output, quick=False, start=0, end=15,
             if os.access(output, os.R_OK):
                 os.remove(output)
             print '\n### Step 15: combining frames (final step) ###\n'
-            ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, expmap=expmap, sigmap=sigmap, second=True)
+            ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, second=True)
             if ret != 0:
                 print >> sys.stderr, 'Error in step 15'
                 print >> sys.stderr, 'failed to shift and combine frames'
                 return 1
 
+            if sigmap != 'none':
+                ret = sigmap(inlist, sigmap, expmap=expmap, whtmap=whtmap, inpref=inpr, ffpref='f2r', objmask=':OBJMASK', reject=reject)
+                if ret != 0:
+                print >> sys.stderr, 'Error in step 15'
+                print >> sys.stderr, 'failed to make sigma map frame'
+                return 1
+                
     return 0
 
 
@@ -395,28 +416,59 @@ if __name__=="__main__":
     parser.add_option("--combine", dest="combine", type="choice", default="average",
                       choices=["average","median","sum"],
                       help="type of combine operation (average|median|sum)")
-    parser.add_option("--reject", dest="reject", type="choice", default="none",
+    parser.add_option("--reject", dest="reject", type="choice", default="sigclip",
                       choices=["none", "minmax", "ccdclip", "crreject", "sigclip", "avsigclip", "pclipor"],
                       help="type of rejection (none|minmax|ccdclip|crreject|sigclip|avsigclip|pclipor)")
     parser.add_option("--expmap", dest="expmap", type="string", default="none",
                       help="exposure map file name (default=none)")
     parser.add_option("--sigmap", dest="sigmap", type="string", default="none",
                       help="sigma map file name (default=none)")
+    parser.add_option("--whtmap", dest="whtmap", type="string", default="none",
+                      help="weight map file name (default=none)")
     parser.add_option("--erase", dest="erase", action="store_true", default=False,
                       help="erase intermediate files (default=False)")
     parser.add_option("--notrace", dest="notrace", action="store_false", default=True,
                       help="automatic trace of object position (default=True)")
+    parser.add_option("--param", dest="param", type="string", default="none",
+                      help="parameter file (default=none)")
 
+    # parse options
     (options, args) = parser.parse_args()
     if len(args) != 2:
         parser.print_help()
         sys.exit()
+
+    # read parameter file
+    if options.param != "none":
+        if not os.path.exists(options.param):
+            print >> sys.stderr, "parameter file (%s) does not exist" % (options.param)
+            sys.exit()
         
+        fparam = open(options.param)
+        nline = 1
+        for line in fparam:
+            if not line.startswith('#'):
+                pparam = line[:-1].split()
+            
+                if len(pparam) >= 2:
+                    option_param = "--"+pparam[0]
+                    if ''.join(sys.argv).find(option_param) < 0:
+                        add_item = "--%s=%s" % (pparam[0],pparam[1])
+                        sys.argv.append(add_item)
+                else:
+                    print >> sys.stderr, "Line %d: \"%s\" is ignored" % (nline, line[:-1])
+            nline += 1
+        fparam.close()
+        
+    # parse options again
+    (options, args) = parser.parse_args()
+
+    # execute pipeline    
     imgred_all(args[0], args[1], quick=options.quick, start=options.start, end=options.end,
                flat=options.flat, skyflat=options.skyflat, bpm=options.bpm,
                iternum=options.iternum, nsigma=options.nsigma, minpix=options.minpix, hsigma=options.hsigma, lsigma=options.lsigma, conv=options.conv,
                dark=options.dark, dist=options.dist, 
                fringe=options.fringe,fr_x0=options.fr_x0, fr_y0=options.fr_y0, fr_step=options.fr_step,
                trace=options.notrace, fitgeom=options.fitgeom,
-               combine=options.combine, reject=options.reject, expmap=options.expmap, sigmap=options.sigmap, erase=options.erase)
+               combine=options.combine, reject=options.reject, expmap=options.expmap, sigmap=options.sigmap, whtmap=options.whtmap, erase=options.erase)
     

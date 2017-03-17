@@ -68,7 +68,7 @@ def growth(inimg, outdata, rmin=1, rmax=50, rbin=1, salgor='median', annu=50, da
     im = pyfits.open(inimg)
     im_data = im[0].data
     im.close()
-
+    
     x = np.ones(im_data.shape[0]*im_data.shape[1]).reshape(im_data.shape[0],im_data.shape[1])* np.arange(im_data.shape[1]) + 1
     y = (np.ones(im_data.shape[1]*im_data.shape[0]).reshape(im_data.shape[1],im_data.shape[0]) * np.arange(im_data.shape[0]) + 1).T
     r = np.sqrt((x-xobj)*(x-xobj) + (y-yobj)*(y-yobj))
@@ -95,13 +95,14 @@ def growth(inimg, outdata, rmin=1, rmax=50, rbin=1, salgor='median', annu=50, da
         rap = rap + rbin
         
     # update sky level
-    npix1 = int(annu**2 * math.pi)
-    npix2 = int((annu + dannu)**2 * math.pi)
-    f_idx = np.logical_and(np.array(pix_arr)>npix1, np.array(pix_arr)<=npix2)
-    aa, bb, rr, _, _ = stats.linregress(np.array(pix_arr)[f_idx], np.array(flux_arr)[f_idx])
-    sky = sky + aa 
+    if salgor != "constant":
+        npix1 = int(annu**2 * math.pi)
+        npix2 = int((annu + dannu)**2 * math.pi)
+        f_idx = np.logical_and(np.array(pix_arr)>npix1, np.array(pix_arr)<=npix2)
+        aa, bb, rr, _, _ = stats.linregress(np.array(pix_arr)[f_idx], np.array(flux_arr)[f_idx])
+        sky = sky + aa 
 
-    print 'Sky level = %f [ADU/pix]' % sky
+        print 'Sky level = %f [ADU/pix]' % sky
 
     # growth curve
     rap_arr = []

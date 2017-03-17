@@ -102,12 +102,12 @@ def flatfield(inlist, flatimg, inpref='', outpref='f', dark='none', bpm='none'):
             iraf.fixpix(outimg_arr[i], bpm, verbose='no')
             iraf.fixpix(outimg_arr[i], bpm, verbose='no')
             iraf.fixpix(outimg_arr[i], bpm, verbose='no')
-     
+            
     return 0
 
             
 if __name__=="__main__":
-
+ 
     usage = "usage: %prog input_list flat_frame [options]"
 
     parser = OptionParser(usage)

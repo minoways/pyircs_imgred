@@ -7,7 +7,7 @@ from misc import *
 from optparse import OptionParser
 
 def distcor(inlist, database, inpref='', outpref='d'):
-    
+
     # open input list and check if it exists
     inimg_arr = check_input(inlist, inpref)
     if isinstance(inimg_arr, int):

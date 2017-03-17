@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np 
 from scipy.ndimage import median_filter
 
-def check_flux(inlist, outdata, inpref='', rap=50, salgor='median', annu=50, dannu=5, skyconst=0.0, xhead='XC1', yhead='YC1', fhead='F1'):
+def check_flux(inlist, outdata, inpref='', rap=50, salgor='median', annu=50, dannu=5, skyconst=0.0, xhead='XC1', yhead='YC1', xobj=0.0, yobj=0.0, header=False):
 
     # check input image list 
     inimg_arr = check_input(inlist, inpref)
@@ -33,9 +33,13 @@ def check_flux(inlist, outdata, inpref='', rap=50, salgor='median', annu=50, dan
         # read data into memory
         im = pyfits.open(inimg_arr[i], mode='update')
         im_data = im[0].data
-        xc = float(im[0].header[xhead])
-        yc = float(im[0].header[yhead])
-
+        if header:
+            xc = float(im[0].header[xhead])
+            yc = float(im[0].header[yhead])
+        else:
+            xc = xobj + float(im[0].header['DXC'])
+            yc = yobj + float(im[0].header['DYC'])
+            
         x = np.ones(im_data.shape[0]*im_data.shape[1]).reshape(im_data.shape[0],im_data.shape[1])* np.arange(im_data.shape[1]) + 1
         y = (np.ones(im_data.shape[1]*im_data.shape[0]).reshape(im_data.shape[1],im_data.shape[0]) * np.arange(im_data.shape[0]) + 1).T
         r = np.sqrt((x-xc)*(x-xc) + (y-yc)*(y-yc))
@@ -63,13 +67,15 @@ def check_flux(inlist, outdata, inpref='', rap=50, salgor='median', annu=50, dan
             sky = skyconst
         else:
             sky_idx = np.logical_and(r>=annu, r<annu+dannu)
-            sky = np.median(fixed_im_data[sky_idx])
+            sky = np.nanmedian(im_data[sky_idx])
 
-        # calculate flux 
-        flux = np.sum(fixed_im_data[phot_idx]) - len(fixed_im_data[phot_idx]) * sky 
+        # calculate flux
+        flux = np.nansum(fixed_im_data[phot_idx]) - len(fixed_im_data[phot_idx]) * sky 
         
         # record flux 
-        im[0].header[fhead] = flux
+        im[0].header['XOBJ'] = xc
+        im[0].header['YOBJ'] = yc
+        im[0].header['FOBJ'] = flux
         fout.write('%s %d %f\n' % (inimg_arr[i], i, flux))
         frame_id.append(i)
         flux_arr.append(flux)
@@ -111,19 +117,23 @@ if __name__=="__main__":
                       help="Width of sky annulus in pix (default=5)")
     parser.add_option("--skyconst", dest="skyconst", type="float", default=0.0,
                       help="Constant sky value per pixel (default=0.0)")
+    parser.add_option("--xobj", dest="xobj", type="float", default=0.0,
+                      help="Object X coordinate in the combined image (default=0.0)")
+    parser.add_option("--yobj", dest="yobj", type="float", default=0.0,
+                      help="Object Y coordinate in the combined image (default=0.0)")
+    parser.add_option("--header", dest="header", action="store_true", default=False,
+                      help="Use header coordinates for the object position (default=False)")
     parser.add_option("--xhead", dest="xhead", type="string", default="XC1",
                       help="Header keyword for the X coordinate of the object (default=XC1)")
     parser.add_option("--yhead", dest="yhead", type="string", default="YC1",
                       help="Header keyword for the Y coordinate of the object (default=YC1)")
-    parser.add_option("--fhead", dest="fhead", type="string", default="F1",
-                      help="Header keyword for recording the measured flux (default=F1)")
     
     (options, args) = parser.parse_args()
     if len(args) != 2:
         parser.print_help()
         sys.exit()
 
-    ret = check_flux(args[0],args[1], inpref=options.inpref, rap=options.rap, salgor=options.salgor, annu=options.annu, dannu=options.dannu, skyconst=options.skyconst, xhead=options.xhead, yhead=options.yhead, fhead=options.fhead)
+    ret = check_flux(args[0],args[1], inpref=options.inpref, rap=options.rap, salgor=options.salgor, annu=options.annu, dannu=options.dannu, skyconst=options.skyconst, xobj=options.xobj, yobj=options.yobj, xhead=options.xhead, yhead=options.yhead, header=options.header)
 
  
     

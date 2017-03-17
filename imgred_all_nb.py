@@ -20,14 +20,15 @@ from imshiftcomb import *
 from optparse import OptionParser
 from erase_file import * 
 from copy_gmp import * 
+from sigmap import *
 
-def imgred_all(inlist, output, start=0, end=15,
+def imgred_all_nb(inlist, output, start=0, end=15,
                flat='none', bpm='none', iternum=50, nsigma=3,
                dark='none',
                dist='none',
                fr_x0=0.0, fr_y0=0.0, fr_step=5,
                fitgeom='shift',
-               combine='average', reject='none', expmap='none', sigmap='none',erase=False):
+                  combine='average', reject='none', expmap='none', sigmap='none', whtmap='none', erase=False):
 
     ret = 0
 
@@ -133,11 +134,16 @@ def imgred_all(inlist, output, start=0, end=15,
         if os.access(output, os.R_OK):
             os.remove(output)
         print '\n### Step 5: combining frames (final step) ###\n'
-        ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, expmap=expmap, sigmap=sigmap, second=True, first_pref='sdfr', second_pref=inpr)
+        ret = imshiftcomb(inlist, output, fitgeom=fitgeom, inpref=inpr, objmask=':OBJMASK', combine=combine, reject=reject, second=True, first_pref='sdfr', second_pref=inpr)
         if ret != 0:
             print >> sys.stderr, 'Error in step 5'
             print >> sys.stderr, 'failed to shift and combine frames'
             return 1
+        if sigmap != 'none':
+            ret = sigmap(inlist, sigmap, expmap=expmap, whtmap=whtmap, inpref=inpr, ffpref='f2r', objmask=':OBJMASK', reject=reject)
+            if ret != 0:
+                print >> sys.stderr, 'Error in step 5'
+                print >> sys.
 
     return 0
    
@@ -182,19 +188,49 @@ if __name__=="__main__":
                       help="exposure map file name (default=none)")
     parser.add_option("--sigmap", dest="sigmap", type="string", default="none",
                       help="sigma map file name (default=none)")
+    parser.add_option("--whtmap", dest="whtmap", type="string", default="none",
+                      help="weight map file name (default=none)")
     parser.add_option("--erase", dest="erase", action="store_true", default=False,
                       help="erase intermediate files (default=False)")
+    parser.add_option("--param", dest="param", type="string", default="none",
+                      help="parameter file (default=none)")
 
+    # parse options
     (options, args) = parser.parse_args()
     if len(args) != 2:
         parser.print_help()
         sys.exit()
+
+    # read parameter file
+    if options.param != "none":
+        if not os.path.exists(options.param):
+            print >> sys.stderr, "parameter file (%s) does not exist" % (options.param)
+            sys.exit()
         
-    imgred_all(args[0], args[1], start=options.start, end=options.end,
+        fparam = open(options.param)
+        nline = 1
+        for line in fparam:
+            if not line.startswith('#'):
+                pparam = line[:-1].split()
+            
+                if len(pparam) >= 2:
+                    option_param = "--"+pparam[0]
+                    if ''.join(sys.argv).find(option_param) < 0:
+                        add_item = "--%s=%s" % (pparam[0],pparam[1])
+                        sys.argv.append(add_item)
+                else:
+                    print >> sys.stderr, "Line %d: \"%s\" is ignored" % (nline, line[:-1])
+            nline += 1
+        fparam.close()
+        
+    # parse options again
+    (options, args) = parser.parse_args()
+        
+    imgred_all_nb(args[0], args[1], start=options.start, end=options.end,
                flat=options.flat, bpm=options.bpm,
                iternum=options.iternum, nsigma=options.nsigma,
                dark=options.dark, dist=options.dist, 
                fr_x0=options.fr_x0, fr_y0=options.fr_y0, fr_step=options.fr_step,
                fitgeom=options.fitgeom,
-               combine=options.combine, reject=options.reject, expmap=options.expmap, sigmap=options.sigmap, erase=options.erase)
+                  combine=options.combine, reject=options.reject, expmap=options.expmap, sigmap=options.sigmap, whtmap=options.whtmap, erase=options.erase)
     

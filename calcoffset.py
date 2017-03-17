@@ -31,7 +31,8 @@ def calcoffset(inlist, inpref='', trace=True, review=False):
     d = ds9()
     d.set('regions delete all')
 
-    # unlearn IRAF commands 
+    # unlearn IRAF commands
+    iraf.reset(stdimage='imt1024')
     iraf.unlearn('display')
     iraf.unlearn('rimexam')
     iraf.unlearn('imexam')
@@ -126,118 +127,133 @@ def calcoffset(inlist, inpref='', trace=True, review=False):
             freg.close()
             d.set('regions load %s' % tmp_reg)
 
-            # pickup objects 
-            if os.access(tmp_reg, os.R_OK):
-                os.remove(tmp_reg)
-            freg = open(tmp_reg, 'w')
+            # check object position guess
+            OutOfRange = 0
             for ii in range(nobj):
                 xg = xref[ii] + (gsx - gsx0)
-                yg = yref[ii] + (gsy - gsy0)            
+                yg = yref[ii] + (gsy - gsy0)
+                if xg <= 0 or xg >= 1024 or yg <= 0 or yg >= 1024:
+                    OutOfRange = 1
+            
+            # pickup objects
+            if OutOfRange == 0:
+                if os.access(tmp_reg, os.R_OK):
+                    os.remove(tmp_reg)
+                freg = open(tmp_reg, 'w')
+                for ii in range(nobj):
+                    xg = xref[ii] + (gsx - gsx0)
+                    yg = yref[ii] + (gsy - gsy0)            
 
-                tmp_coo = tmp_prefix+'_coo.dat'
-                if os.access(tmp_coo, os.R_OK):
-                    os.remove(tmp_coo)
-                fcoo = open(tmp_coo, 'w')
-                fcoo.write('%.3f %.3f a\n' % (xg, yg))
-                fcoo.close()
-                imexam_ng = 1
-                auto_skip = 0
-                while imexam_ng == 1:
-                    try:
-                        ret = iraf.imexam(inimg_arr[i],1,imagecu=tmp_coo, use_dis='no', Stdout=1)
-                        imexam_ng = 0
-                        auto_skip = 0
-                    except:
-                        print '\nIRAF imexam failed for object No. %d' % (ii+1) 
-                        print 'Try again by changing rimexam parameters'
-                        print 'Hit return to enter rimexam parameter setting window'
-                        print 'Type \'q\' to skip this object.'
+                    tmp_coo = tmp_prefix+'_coo.dat'
+                    if os.access(tmp_coo, os.R_OK):
+                        os.remove(tmp_coo)
+                    fcoo = open(tmp_coo, 'w')
+                    fcoo.write('%.3f %.3f a\n' % (xg, yg))
+                    fcoo.close()
+                    imexam_ng = 1
+                    auto_skip = 0
+                    while imexam_ng == 1:
+                        try:
+                            ret = iraf.imexam(inimg_arr[i],1,imagecu=tmp_coo, use_dis='no', Stdout=1)
+                            imexam_ng = 0
+                            auto_skip = 0
+                        except:
+                            print '\nIRAF imexam failed for object No. %d' % (ii+1) 
+                            print 'Try again by changing rimexam parameters'
+                            print 'Hit return to enter rimexam parameter setting window'
+                            print 'Type \'q\' to skip this object.'
                     
-                        check = ''
-                        while check.lower() != 'q' and check.lower() != 'rimexam':
-                            check = raw_input('Hit return or type \'q\':')
-                            if check.lower() == '' or check.lower() == 'rimexam':
-                                check = 'rimexam'
-                                print 'Push Save&Quit button to quit from the parameter setting window'
-                                iraf.epar('rimexam')
-                                imexam_ng = 1
-                            elif check.lower() == 'q':
-                                check = 'q'
-                                auto_skip = 1
-                                imexam_ng = 0
-                            else :
-                                print 'Error: unknown answer (%s)' % (check)
+                            check = ''
+                            while check.lower() != 'q' and check.lower() != 'rimexam':
+                                check = raw_input('Hit return or type \'q\':')
+                                if check.lower() == '' or check.lower() == 'rimexam':
+                                    check = 'rimexam'
+                                    print 'Push Save&Quit button to quit from the parameter setting window'
+                                    iraf.epar('rimexam')
+                                    imexam_ng = 1
+                                elif check.lower() == 'q':
+                                    check = 'q'
+                                    auto_skip = 1
+                                    imexam_ng = 0
+                                else :
+                                    print 'Error: unknown answer (%s)' % (check)
                 
-                os.remove(tmp_coo)
+                    os.remove(tmp_coo)
 
-                if auto_skip == 0:
-                    # display result
-                    for j in range(len(ret)):
-                        print ret[j]
-                    print '\n'
+                    if auto_skip == 0:
+                        # display result
+                        for j in range(len(ret)):
+                            print ret[j]
+                        print '\n'
 
-                    # parse results
-                    param1 = ret[len(ret)-2].split()
-                    param2 = ret[len(ret)-1].split()
-                    if len(param1) == 4 and len(param2) == 11:
-                        if isfloat(param1[0]):
-                            xobj.append(float(param1[0]))
-                        if isfloat(param1[0]):
-                            yobj.append(float(param1[1]))
-                        if isfloat(param2[4]):
-                            peak.append(float(param2[4]))
-                        else:
+                        # parse results
+                        param1 = ret[len(ret)-2].split()
+                        param2 = ret[len(ret)-1].split()
+                        if len(param1) == 4 and len(param2) == 11:
+                            if isfloat(param1[0]):
+                                xobj.append(float(param1[0]))
+                            if isfloat(param1[0]):
+                                yobj.append(float(param1[1]))
+                            if isfloat(param2[4]):
+                                peak.append(float(param2[4]))
+                            else:
+                                peak.append(-9999.0)
+                            if isfloat(param2[9]):
+                                fwhm.append(float(param2[9]))
+                            else:
+                                fwhm.append(-9999.0)
+                            freg.write('image; circle %.3f %.3f 5 # color=red\n' % (xobj[ii], yobj[ii]))
+                
+                        else :
+                            xobj.append(-9999.0)
+                            yobj.append(-9999.0)
                             peak.append(-9999.0)
-                        if isfloat(param2[9]):
-                            fwhm.append(float(param2[9]))
-                        else:
                             fwhm.append(-9999.0)
-                        freg.write('image; circle %.3f %.3f 5 # color=red\n' % (xobj[ii], yobj[ii]))
-                
-                    else :
+                    else:
                         xobj.append(-9999.0)
                         yobj.append(-9999.0)
                         peak.append(-9999.0)
                         fwhm.append(-9999.0)
-                else:
-                    xobj.append(-9999.0)
-                    yobj.append(-9999.0)
-                    peak.append(-9999.0)
-                    fwhm.append(-9999.0)
 
-            freg.close()
-            d.set('regions load %s' % tmp_reg)
-            os.remove(tmp_reg)
+                freg.close()
+                d.set('regions load %s' % tmp_reg)
+                os.remove(tmp_reg)
 
-            check = raw_input('Is this position okay? (yes/no/skip)')
-            if check.lower() == '' or check.lower() == 'yes':
-                calc_ng = 0
+                check = raw_input('Is this position okay? (yes/no/skip)')
+                if check.lower() == '' or check.lower() == 'yes':
+                    calc_ng = 0
 
-                # update reference points
-                nskip = 0
-                for ii in range(len(xobj)):
-                    if xobj[ii] < 0:
-                        nskip += 1
-                if nobj == len(xobj) and nskip == 0:
-                    gsx0 = gsx
-                    gsy0 = gsy 
-                    xref = xobj
-                    yref = yobj 
-            elif check.lower() == 'skip':
-                calc_ng = 0
-                skip_image = 1
-                xobj = []
-                yobj = []
-                peak = []
-                fwhm = []
-                for ii in range(nobj):
-                    xobj.append(-9999.0)
-                    yobj.append(-9999.0)
-                    peak.append(-9999.0)
-                    fwhm.append(-9999.0)
-            else :
+                    # update reference points
+                    nskip = 0
+                    for ii in range(len(xobj)):
+                        if xobj[ii] < 0:
+                            nskip += 1
+                    if nobj == len(xobj) and nskip == 0:
+                        gsx0 = gsx
+                        gsy0 = gsy 
+                        xref = xobj
+                        yref = yobj 
+                elif check.lower() == 'skip':
+                    calc_ng = 0
+                    skip_image = 1
+                    xobj = []
+                    yobj = []
+                    peak = []
+                    fwhm = []
+                    for ii in range(nobj):
+                        xobj.append(-9999.0)
+                        yobj.append(-9999.0)
+                        peak.append(-9999.0)
+                        fwhm.append(-9999.0)
+                else :
+                    calc_ng = 1
+            else:
+                print ""
+                print "Warning:"
+                print "Estimated position is out of range"
+                print "Pick up object manually\n"
                 calc_ng = 1
-
+                
         # calculate position and fwhm
         if calc_ng == 1:
 
@@ -441,7 +457,7 @@ def calcoffset(inlist, inpref='', trace=True, review=False):
 
                         xref = xobj
                         yref = yobj
-
+                        
                         # save dummy values for the skipped frames at the beginning 
                         if i != 0:
                             for ii in range(i):
@@ -490,6 +506,11 @@ def calcoffset(inlist, inpref='', trace=True, review=False):
                     check = raw_input('')
                     if check.lower() == '' or check.lower() == 'yes':
                         calc_ok = 1
+                        xref = xobj
+                        yref = yobj
+                        gsx0 = gsx
+                        gsy0 = gsy
+                        
                     elif check.lower() == 'r' or check.lower() == 'rimexam':
                         print 'Push Save\&Quit to quit from the parameter setting window\n'
                         iraf.epar('rimexam')

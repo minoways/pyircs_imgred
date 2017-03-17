@@ -35,7 +35,7 @@ def remove_temp_all(prefix):
         for file in files:
             os.remove(file)
 
-
+# check file in the input list by adding the input prefix.
 def check_input(inlist, inpref):
 
     # open input list and check if it exists
@@ -53,6 +53,39 @@ def check_input(inlist, inpref):
                 inimg = fname
             else:
                 inimg = inpref + os.path.basename(fname)
+            if not os.access(inimg, os.R_OK):
+                print >> sys.stderr, 'cannot open image %s' % inimg
+                fin.close()
+                return 1 
+            else:
+                inimg_arr.append(inimg)
+    fin.close()
+
+    if len(inimg_arr) == 0:
+        print >> sys.stderr, 'input list (%s) does not include any file' % inlist
+        return 1
+
+    return inimg_arr
+
+# check file in the input list by replacing the existing prefix with the input prefix.
+def check_input2(inlist, inpref):
+
+    # open input list and check if it exists
+    try :
+        fin = open(inlist)
+    except IOError:
+        print >> sys.stderr, 'cannot open %s' % inlist
+        return 1
+
+    inimg_arr = []
+    for line in fin:
+        if not line.startswith('#'):
+            fname = line[:-1]
+            if inpref == '':
+                inimg = fname
+            else:
+                basename = os.path.basename(fname)
+                inimg = inpref + basename[basename.find('IRCA'):]
             if not os.access(inimg, os.R_OK):
                 print >> sys.stderr, 'cannot open image %s' % inimg
                 fin.close()
@@ -331,12 +364,14 @@ def meanclip(indata, clipsig=3.0, maxiter=5, converge_num=0.001, median=0, verbo
  
    while (c1 >= c2) and (iter < maxiter):
        lastct = ct
-       medval = np.median(skpix)
+       medval = np.nanmedian(skpix)
+       #sig = np.nanstd(skpix)
        sig = np.std(skpix)
        #print '%f %f %f' % (clipsig, sig, medval)
        wsm = np.where( abs(skpix-medval) < clipsig*sig )
+       #print wsm
        ct = len(wsm[0])
-       if ct > 0:
+       if ct > 1:
            skpix = skpix[wsm]
  
        c1 = abs(ct - lastct)
@@ -345,9 +380,9 @@ def meanclip(indata, clipsig=3.0, maxiter=5, converge_num=0.001, median=0, verbo
    # End of while loop
  
    if median:
-       mean  = np.median( skpix )
+       mean  = np.nanmedian( skpix )
    else:
-       mean  = np.mean( skpix )
+       mean  = np.nanmean( skpix )
    sigma = robust_sigma( skpix )
  
    if verbose:
