@@ -26,7 +26,7 @@ def imgred_all_nb(inlist, output, start=0, end=15,
                flat='none', bpm='none', iternum=50, nsigma=3,
                dark='none',
                dist='none',
-               fr_x0=0.0, fr_y0=0.0, fr_step=5,
+                  fr_x0=0.0, fr_y0=0.0, fr_step=5, surfit=False, xsorder=4, ysorder=4,
                fitgeom='shift',
                   combine='average', reject='none', expmap='none', sigmap='none', whtmap='none', erase=False):
 
@@ -88,7 +88,7 @@ def imgred_all_nb(inlist, output, start=0, end=15,
     # 2. fringe subtraction
     if start < 3 and end >= 2:
         print '\n### Step 2: fringe subtraction ###\n'
-        ret = fringe_sub(inlist, inpref=inpr, outpref='fs', mskpref=':OBJMASK', second=True, iternum=iternum, nsigma=nsigma, fr_x0=fr_x0, fr_y0=fr_y0, fr_step=fr_step)
+        ret = fringe_sub(inlist, inpref=inpr, outpref='fs', mskpref=':OBJMASK', second=True, iternum=iternum, nsigma=nsigma, fr_x0=fr_x0, fr_y0=fr_y0, fr_step=fr_step, surfit=surfit, xsorder=xsorder, ysorder=ysorder)
         if ret != 0:
             print >> sys.stderr, 'Error in step 2'
             print >> sys.stderr, 'failed to subtract fringe from the flat corrected frames'
@@ -167,6 +167,12 @@ if __name__=="__main__":
                       help="Fringe center Y coordinate (default=0.0)")
     parser.add_option("--fr_step", dest="fr_step", type="int", default=5,
                       help="Step size for fringe fitting (default=5)")
+    parser.add_option("--surfit", dest="surfit", action="store_true", default=False,
+                      help="Fit residual surface for fringe subtraction? (default=False)")
+    parser.add_option("--xsorder", dest="xsorder", type="int", default=4,
+                      help="X-order of the residual surface fit for fringe subtraction (default=4)")
+    parser.add_option("--ysorder", dest="ysorder", type="int", default=4,
+                      help="Y-order of the residual surface fit for fringe subtraction (default=4)")
     parser.add_option("--bpm", dest="bpm", type="string", default="none",
                       help="bad pixel mask frame (default=none)")
     parser.add_option("--iternum", dest="iternum", type="int", default=50,
@@ -225,7 +231,7 @@ if __name__=="__main__":
                flat=options.flat, bpm=options.bpm,
                iternum=options.iternum, nsigma=options.nsigma,
                dark=options.dark, dist=options.dist, 
-               fr_x0=options.fr_x0, fr_y0=options.fr_y0, fr_step=options.fr_step,
+                  fr_x0=options.fr_x0, fr_y0=options.fr_y0, fr_step=options.fr_step, surfit=options.surfit, xsorder=options.xsorder, ysorder=options.ysorder,
                fitgeom=options.fitgeom,
                   combine=options.combine, reject=options.reject, expmap=options.expmap, sigmap=options.sigmap, whtmap=options.whtmap, erase=options.erase)
     

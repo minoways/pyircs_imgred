@@ -8,7 +8,7 @@ from misc import *
 from operator import itemgetter 
 from optparse import OptionParser
 
-def fringe_sub(inlist, inpref='', outpref='s', mskpref='none', iternum=50, nsigma=3, bpm='none', second=False, fr_x0=0.0, fr_y0=0.0, fr_step=5):
+def fringe_sub(inlist, inpref='', outpref='s', mskpref='none', iternum=50, nsigma=3, bpm='none', second=False, fr_x0=0.0, fr_y0=0.0, fr_step=5, surfit=False, xsorder=4, ysorder=4):
     
     # load IRAF package
     iraf.proto()
@@ -75,6 +75,8 @@ def fringe_sub(inlist, inpref='', outpref='s', mskpref='none', iternum=50, nsigm
         im_hdr = im[0].header
         im_data = im[0].data
         out_data = im_data - objmed
+        if surfit:
+            out_data_org = np.copy(out_data)
         im.close()
             
         # fringe subtraction for NB imaging 
@@ -101,10 +103,12 @@ def fringe_sub(inlist, inpref='', outpref='s', mskpref='none', iternum=50, nsigm
             r2 = r1 + fr_step
             idx = np.logical_and(r>=r1, r<r2)
             out_subset = out_data[idx]
-
+            
             if mask == 1:
                 mask_subset = mask_data[idx]
                 idx_sky = np.where(mask_subset == 0)
+                #if len(out_subset[idx_sky]) != len(out_subset):
+                #    print "masked:",inimg_arr[i],r1,r2,fr_x0,fr_y0,len(out_subset[idx_sky]),"/",len(out_subset),meanclip(out_subset[idx_sky],median=1)[0],meanclip(out_subset, median=1)[0]
                 med, sigma = meanclip(out_subset[idx_sky],median=1)
             else:
                 med, sigma = meanclip(out_data[idx],median=1)
@@ -116,11 +120,47 @@ def fringe_sub(inlist, inpref='', outpref='s', mskpref='none', iternum=50, nsigm
         hdu = pyfits.PrimaryHDU(out_data)
         imgout = pyfits.HDUList([hdu])
         imgout[0].header = im_hdr
-        imgout.writeto(outimg_arr[i])
-        imgout.close()
-        
-        if bpmex == 1:
+        if surfit:
+            tmp_fsub = tmp_prefix + "fsub" + os.path.basename(inimg_arr[i])
+            tmp_fsub_fit = tmp_prefix + "fsub_fit" + os.path.basename(inimg_arr[i])
+            imgout.writeto(tmp_fsub)
+            imgout.close()
+            
+            iraf.imsurfit(tmp_fsub, tmp_fsub_fit, xsorder, ysorder)
+            imfit = pyfits.open(tmp_fsub_fit)
+            imfit_data = imfit[0].data
+            out_data_fs = np.copy(out_data_org - imfit_data)
+
+            r1 = rmin
+            while r1 <= rmax:
+                r2 = r1 + fr_step
+                idx = np.logical_and(r>=r1, r<r2)
+                out_subset = out_data_fs[idx]
+            
+                if mask == 1:
+                    mask_subset = mask_data[idx]
+                    idx_sky = np.where(mask_subset == 0)
+                    med, sigma = meanclip(out_subset[idx_sky],median=1)
+                else:
+                    med, sigma = meanclip(out_data_fs[idx],median=1)
+
+                out_data_org[idx] = out_data_org[idx] - med
+                r1 += fr_step
+            
+            hdu = pyfits.PrimaryHDU(out_data_org)
+            imgout = pyfits.HDUList([hdu])
+            imgout[0].header = im_hdr
+            imgout.writeto(outimg_arr[i])
+            imgout.close()
+
             remove_temp_all(tmp_prefix)
+            
+        else:
+            imgout.writeto(outimg_arr[i])
+            imgout.close()
+
+            if bpmex == 1:
+                remove_temp_all(tmp_prefix)
 
     return 0
 
@@ -149,11 +189,17 @@ if __name__=="__main__":
                       help="Fringe center Y coordinate (default=0.0)")
     parser.add_option("--fr_step", dest="fr_step", type="int", default=5,
                       help="Step size for fringe fitting (default=5)")
+    parser.add_option("--surfit", dest="surfit", action="store_true", default=False,
+                      help="Fit residual surface? (default=False)")
+    parser.add_option("--xsorder", dest="xsorder", type="int", default=4,
+                      help="X-order of the residual surface fit (default=4)")
+    parser.add_option("--ysorder", dest="ysorder", type="int", default=4,
+                      help="Y-order of the residual surface fit (default=4)")
 
     (options, args) = parser.parse_args()
     if len(args) != 1:
         parser.print_help()
         sys.exit()
                 
-    fringe_sub(args[0], inpref=options.inpref, outpref=options.outpref, mskpref=options.mskpref, iternum=options.iternum, nsigma=options.nsigma, bpm=options.bpm, second=options.second, fr_x0=options.fr_x0, fr_y0=options.fr_y0, fr_step=options.fr_step)
+    fringe_sub(args[0], inpref=options.inpref, outpref=options.outpref, mskpref=options.mskpref, iternum=options.iternum, nsigma=options.nsigma, bpm=options.bpm, second=options.second, fr_x0=options.fr_x0, fr_y0=options.fr_y0, fr_step=options.fr_step, surfit=options.surfit, xsorder=options.xsorder, ysorder=options.ysorder)
   

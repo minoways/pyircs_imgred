@@ -389,7 +389,16 @@ def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', comb
             os.remove(tmp_expmap)
 
     iraf.unlearn('imcombine')
-    iraf.imcombine('@'+obj_list, comb_img, sigma='', rejmask=tmp_rejmask, expmasks=tmp_expmap, combine=combine, reject=reject, masktype='!BPM', maskvalue=0.0, zero='@'+zeroshift, weight='@'+expweight, expname='EXPMAP')
+    try:
+        iraf.imcombine('@'+obj_list, comb_img, sigma='', rejmask=tmp_rejmask, expmasks=tmp_expmap, combine=combine, reject=reject, masktype='!BPM', maskvalue=0.0, zero='@'+zeroshift, weight='@'+expweight, expname='EXPMAP')
+    except:
+        if os.access(comb_img, os.R_OK):
+            os.remove(comb_img)
+        if expmap != 'none':
+            if os.access(tmp_expmap, os.R_OK):
+                os.remove(tmp_expmap)
+        iraf.imcombine('@'+obj_list, comb_img, sigma='', rejmask='', expmasks=tmp_expmap, combine=combine, reject=reject, masktype='!BPM', maskvalue=0.0, zero='@'+zeroshift, weight='@'+expweight, expname='EXPMAP')
+    
     if sigmap != 'none':
         tmp_inverse_var_sum = tmp_prefix+'inverse_var.fits'
         if os.access(tmp_inverse_var_sum, os.R_OK):
@@ -405,8 +414,9 @@ def imshiftcomb(inlist, outimg, fitgeom='shift', inpref='', objmask='none', comb
     iraf.unlearn('imcopy')
     cut_img = '%s[%d:%d,%d:%d]' % (comb_img, xcmin, xcmax, ycmin, ycmax)
     iraf.imcopy(cut_img, outimg)
-    cut_exp = '%s[%d:%d,%d:%d]' % (tmp_expmap, xcmin, xcmax, ycmin, ycmax)
-    iraf.imcopy(cut_exp, expmap)
+    if expmap != 'none':
+        cut_exp = '%s[%d:%d,%d:%d]' % (tmp_expmap, xcmin, xcmax, ycmin, ycmax)
+        iraf.imcopy(cut_exp, expmap)
     if sigmap != 'none':
         cut_sigma = '%s[%d:%d,%d:%d]' % (tmp_sigma, xcmin, xcmax, ycmin, ycmax)
         iraf.imcopy(cut_sigma, sigmap)
