@@ -15,6 +15,7 @@ from pyraf import iraf
 import tempfile 
 from misc import *
 from mkskyflat import *
+from mkskyflat_quick import *
 from flatfield import * 
 from mkobjmask import * 
 from distcor import *
@@ -165,11 +166,18 @@ def imgred_all(inlist, output, quick=False, start=0, end=15,
     if start < 2 and end >= 1:
         print '\n### Step 1: making self sky flat frame ###\n'
         if skyflat:
-            ret = mkskyflat(inlist, flat, inpref=inpr, mskpref='m', bpm=bpm, iternum=iternum, nsigma=nsigma, minpix=minpix, hsigma=hsigma, lsigma=lsigma, conv=conv)
-            if ret != 0:
-                print >> sys.stderr, 'Error in step 1'
-                print >> sys.stderr, 'failed to make self sky flat frame'
-                return 1
+            if quick:
+                ret = mkskyflat_quick(inlist, flat, inpref=inpr, bpm=bpm, iternum=iternum, nsigma=nsigma)
+                if ret != 0:
+                    print >> sys.stderr, 'Error in step 1'
+                    print >> sys.stderr, 'failed to make self sky flat frame'
+                    return 1
+            else:
+                ret = mkskyflat(inlist, flat, inpref=inpr, mskpref='m', bpm=bpm, iternum=iternum, nsigma=nsigma, minpix=minpix, hsigma=hsigma, lsigma=lsigma, conv=conv)
+                if ret != 0:
+                    print >> sys.stderr, 'Error in step 1'
+                    print >> sys.stderr, 'failed to make self sky flat frame'
+                    return 1
         else:
             print 'Skip step 1 and use %s as a flat frame' % (flat)
    
